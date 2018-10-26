@@ -1,0 +1,122 @@
+Warmup 02
+================
+Owen McGrattan
+9/14/2017
+
+``` r
+#downloading data
+
+# assembling url (so it fits on the screen)
+github <- 'https://github.com/ucb-stat133/stat133-hws-fall17/'
+repo <- 'raw/master/warmup02/data/nba2017-salary-points.RData'
+
+download.file(
+  url = paste0(github, repo),
+  destfile = "nba2017-salary-points.RData")
+```
+
+``` r
+# load the objects
+load("nba2017-salary-points.RData")
+
+# list the available objects
+ls()
+```
+
+    ##  [1] "experience" "github"     "player"     "points"     "points1"   
+    ##  [6] "points2"    "points3"    "position"   "repo"       "salary"    
+    ## [11] "team"
+
+experience is a character vector that seems to give the number of years played for players with "R" denoting rookies in the league.
+
+player is a character vector with the names of different players, for 441 players.
+
+points must be the total number of points scored by each individual player, a numeric vector. 441 players.
+
+The other points vectors (points1,points2,points3) are numeric vectors as well that I believe denote the number of free throws, 2-pointers, and 3-pointers that each player has made.
+
+position is a character vector listing the position of each player. 441 objects long like the rest.
+
+salary is a numeric vector of each player's single-season salary in USD, 441 objects long.
+
+team is a factor with each of the NBA team's abbreviations.
+
+Quantitative Variable: points3
+------------------------------
+
+The quantitative variable I am going to analyze is points3, the number of 3 pointers made by each player.
+
+``` r
+summary(points3)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##    0.00    3.00   32.00   49.71   78.00  324.00
+
+``` r
+sd(points3)
+```
+
+    ## [1] 55.9721
+
+This is a distribution with a pretty strong skew to the right. With a mean almost 18 threes greater than the median, there's a small group of players who made an absurd amount of threes. The standard deviation here is large as expected especially when 25% of the values have 3 or fewer 3's made and there are outliers with over 200 and 300 3's made. There are certainly drastically different styles of play here.
+
+``` r
+hist(points3,breaks=25,main="3-Pointers Made",xlab="# of 3's made")
+```
+
+![](up02-owen-mcgrattan_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+``` r
+boxplot(points3,main="3-Pointers Made")
+```
+
+![](up02-owen-mcgrattan_files/figure-markdown_github/unnamed-chunk-4-2.png)
+
+There are around 150 players who made fewer than 10 3's. The number of players with more than 150 is rare, with one player outperforming everyone else by a wide margin with over 300 3's.
+
+``` r
+d <- density(points3)
+plot(d)
+```
+
+![](up02-owen-mcgrattan_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+Qualitative Variable
+--------------------
+
+I'm going to take a look at the position variable.
+
+Now to take a look at the number of players at each position.
+
+``` r
+table(position)
+```
+
+    ## position
+    ##  C PF PG SF SG 
+    ## 89 89 85 83 95
+
+``` r
+prop.table(table(position))
+```
+
+    ## position
+    ##         C        PF        PG        SF        SG 
+    ## 0.2018141 0.2018141 0.1927438 0.1882086 0.2154195
+
+There's a fairly even spread of players at each position with Small Forwards making up the fewest at a position and Shooting Guards making up the most. The proportions aren't that drastically different and a better analysis would be whether or not individual teams organize their rosters in line with proportions like these.
+
+``` r
+#Visualize number of players at each position
+barplot(table(position),ylab="Count",main="No. of players at each posiiton")
+```
+
+![](up02-owen-mcgrattan_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+Visually there isn't much difference that can be seen amongst the different positions. Each position roughly makes 1/5 th of all the players in the league.
+
+Wrap Up/Reflection
+------------------
+
+Working with R this time around was pretty comfortable. I came across some issues trying to make barcharts with the position data because I didn't use the table() funciton to change the position vector. That hiccup certainly took the most time at the end, but even then it wasn't much time at all. Everything else went smoothly!

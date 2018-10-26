@@ -1,0 +1,140 @@
+---
+title: "HW02"
+author: "Owen McGrattan"
+date: "9/30/2017"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### 1. Importing the data
+
+```{r}
+# practice for both types of data import functions
+require(readr)
+# read_csv()
+nba <- read_csv("~/stat133/stat133-hws-fall17/hw02/data/nba2017-player-statistics.csv", 
+    col_types = cols(Position = col_factor(levels = c("C", 
+        "PF", "PG", "SG", "SF"))))
+str(nba)
+```
+
+```{r}
+# read.csv()
+nba_2 <- read.csv("~/stat133/stat133-hws-fall17/hw02/data/nba2017-player-statistics.csv",colClasses = c("character","character","factor","character","double","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer","integer"))
+str(nba_2)
+```
+
+#### 2. Cleaning up some data
+
+```{r}
+# change the experience vector into a numeric one, replacing "R" with 0
+
+nba$Experience <- as.numeric(gsub("R","0",nba$Experience))
+```
+
+#### 3. Player Performance
+
+```{r}
+# create variables to help make EFF
+nba$missed_FG <- nba$FGA - nba$FGM
+nba$missed_FT <- nba$FTA - nba$FTM
+
+nba$pts <- (nba$Points3*3) + (nba$Points2 *2) + (nba$FTM)
+
+nba$reb <- nba$OREB + nba$DREB
+
+nba$mpg <- nba$MIN/nba$GP
+```
+
+```{r}
+# calculate EFF
+nba$eff <- (nba$pts + nba$reb + nba$AST + nba$STL + nba$BLK - nba$missed_FG - nba$missed_FT - nba$TO) / nba$GP
+
+summary(nba$eff)
+```
+
+```{r}
+# create a hist to see the distribution of eff
+hist(nba$eff, main = "Histogram of Efficiency (EFF)",xlab = "EFF", col = "lightblue")
+```
+
+
+```{r}
+# bring up dplyr to provide a list of the best players
+require(dplyr)
+slice(arrange(select(nba,Player, Team, Salary, eff),desc(eff)),1:10)
+```
+
+```{r}
+#give the names of players with negative EFF
+select(filter(nba,eff < 0),Player)
+```
+
+```{r}
+# set up a data frame with only the selected variables
+dum <- select(nba, eff, pts,reb, AST, STL, BLK, GP, missed_FG, missed_FT, TO)
+cor(dum)
+
+```
+
+```{r}
+#list correlations in decreasing order
+sort(cor(dum)[,1],decreasing = TRUE)
+```
+
+
+```{r}
+vec <- cor(dum)
+cors <- (vec[,1])[2:10]
+cors[7:10] <- -cors[7:10]
+cors <- sort(cors, decreasing = TRUE)
+barplot(height = cors,cex.names = 0.45, main = "Correlations between Player Stats and EFF", col = c("lightgray","lightgray","lightgray","lightgray","lightgray","lightgray","red","red","red"))
+```
+
+
+#### 4. Efficiency and Salary
+
+```{r}
+# create a scatterplot between efficiency and salary with loess line
+require(ggplot2)
+ggplot(nba, aes(eff,Salary))+ geom_point(color = 'blue') + geom_smooth(method = loess,color = 'black') + labs(title = "Efficiency vs Salary")
+
+```
+
+
+```{r}
+# correlation between salary and efficiency
+cor(nba$Salary,nba$eff)
+```
+
+- A player's salary and efficiency are closely tied together.  With a correlation coefficient of 0.655, it makes sense that players with higher efficiencies are paid higher salaries.  One big question though comes with years of experience.  There are numerous players who have above average efficiencies but are paid much less than they should be.
+
+```{r}
+# create MPG stat
+nba$mpg <- nba$MIN / nba$GP
+
+# checking on established players
+players2 <- filter(nba, mpg >= 20)
+ggplot(players2, aes(eff,Salary))+ geom_point(color = 'blue') + geom_smooth(method = loess,color = 'black') + labs(title = "Efficiency vs Salary (20 min per game)")
+```
+
+```{r}
+cor(players2$eff, players2$Salary)
+```
+
+- Surprisingly the correlation between the two variables dropped (0.656 vs 0.537) when looking at the "more established" group of players who play on average 20 minutes per game.  The drop could be noise considering the fact that the group shrunk by 210 players, but the difference is not so substantial.  
+
+- The difference still does not address those who most likely do not have much experience in the league but are still very skilled and put up high efficiencies.  Looking at the relation between these two variables is slightly flawed and expecting the correlation to line up just as it had in the original data set is also a bit of a stretch.
+
+- It's also important to note that these salaries are most likely part of contracts that had been established in years prior.  Players age and regress with variation in their year-to-year performance and their salaries will most likely not change midway through their contract.  I am sure that the correlation between salary and career average efficiency is stronger.
+
+#### 5. Reflection
+
+- Things went smoothly this time around.  The only thing that really tripped me up was extracting the individual correlation values, but solving that was gratifying.
+
+- I would say that this assignment took me longer than the previous one but that was due to more of the setup with the data dictionary, creating a new README file and going through both of the data import functions.
+
+-  I still am not completely used to the functions in the dplyr package, but the functions are so useful and simple it'll be hard to go back to any other way. Very thankful that it was introduced, just wish it was sooner!
